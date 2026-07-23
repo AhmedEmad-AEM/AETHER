@@ -8,7 +8,7 @@ NC='\033[0m'
 BOLD='\033[1m'
 
 echo -e "${BOLD}${GREEN}╔════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}${GREEN}║   AETHER - Installer v3.5.0         ║${NC}"
+echo -e "${BOLD}${GREEN}║   AETHER - Installer v3.5.0            ║${NC}"
 echo -e "${BOLD}${GREEN}╚════════════════════════════════════════╝${NC}"
 echo
 
