@@ -1,5 +1,5 @@
 # AETHER
-<img width="2991" height="6400" alt="Untitled design (2)" src="https://github.com/user-attachments/assets/b0b5c20e-07ec-4cf9-adcf-4a9eb54e1d43" />
+<img width="2871" height="720" alt="Untitled design" src="https://github.com/user-attachments/assets/048d2de2-f169-4101-90f6-bbbd83bfae04" />
 
 # ⚡ AETHER - Payload Genesis v3.5
 
