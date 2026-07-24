@@ -1,3 +1,10 @@
+![Platform](https://img.shields.io/badge/Platform-Kali_Linux-blue)
+
+![Bash](https://img.shields.io/badge/Bash-5.x-green)
+
+![License](https://img.shields.io/badge/License-MIT-orange)
+
+![Version](https://img.shields.io/badge/Version-v3.5-red)
 # AETHER
 <img width="2991" height="750" alt="Untitled design (3)" src="https://github.com/user-attachments/assets/5216c163-d935-40db-8c71-c948ad3d55fa" />
 
