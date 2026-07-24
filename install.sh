@@ -4,79 +4,211 @@
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 BOLD='\033[1m'
 
-echo -e "${BOLD}${GREEN}╔════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}${GREEN}║   AETHER - Installer v3.5.0            ║${NC}"
-echo -e "${BOLD}${GREEN}╚════════════════════════════════════════╝${NC}"
-echo
+print_header() {
+    echo -e "${BOLD}${GREEN}╔════════════════════════════════════════╗${NC}"
+    echo -e "${BOLD}${GREEN}║   AETHER - Installation v3.6.0         ║${NC}"
+    echo -e "${BOLD}${GREEN}║   Payload Genesis for Kali Linux       ║${NC}"
+    echo -e "${BOLD}${GREEN}╚════════════════════════════════════════╝${NC}"
+    echo
+}
 
-# 1. Check if the main script exists
-if [ ! -f "aether" ]; then
-    echo -e "${RED}[!] Error: 'aether' file not found in current directory.${NC}"
-    echo -e "${YELLOW}[*] Please make sure you are in the correct folder.${NC}"
-    exit 1
-fi
+print_success() {
+    echo -e "${GREEN}[✓]${NC} $1"
+}
 
-# 2. Make it executable
-echo -e "${YELLOW}[*] Making 'aether' executable...${NC}"
-chmod +x aether
-echo -e "${GREEN}[+] Done.${NC}"
+print_error() {
+    echo -e "${RED}[✗]${NC} $1"
+}
 
-# 3. Check if already installed in /usr/local/bin
-if [ -f "/usr/local/bin/aether" ]; then
-    echo -e "${YELLOW}[*] Aether is already installed at /usr/local/bin/aether${NC}"
-    read -rp "Overwrite? (y/n): " overwrite
-    if [[ "$overwrite" != "y" ]]; then
-        echo -e "${GREEN}[+] Installation cancelled.${NC}"
-        exit 0
+print_info() {
+    echo -e "${YELLOW}[*]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[!]${NC} $1"
+}
+
+print_step() {
+    echo
+    echo -e "${BLUE}${BOLD}Step $1:${NC} $2"
+    echo -e "${BLUE}─────────────────────────────────────────${NC}"
+}
+
+main() {
+    print_header
+    
+    print_step "1" "Verifying AETHER files"
+    
+    if [ ! -f "aether" ]; then
+        print_error "File 'aether' not found in current directory"
+        print_info "Please run this installer from the AETHER repository root"
+        echo "  cd AETHER && bash install.sh"
+        exit 1
     fi
-fi
-
-# 4. Move to /usr/local/bin
-echo -e "${YELLOW}[*] Moving 'aether' to /usr/local/bin/ (requires sudo)...${NC}"
-if sudo mv aether /usr/local/bin/; then
-    sudo chmod +x /usr/local/bin/aether
-    echo -e "${GREEN}[+] Successfully installed to /usr/local/bin/aether${NC}"
-else
-    echo -e "${RED}[!] Failed to move file. Try: sudo bash install.sh${NC}"
-    exit 1
-fi
-
-# 5. Create symlink in /usr/bin so sudo can find it
-echo -e "${YELLOW}[*] Creating symlink in /usr/bin/aether...${NC}"
-sudo ln -sf /usr/local/bin/aether /usr/bin/aether
-if [ -L "/usr/bin/aether" ]; then
-    echo -e "${GREEN}[+] Symlink created: /usr/bin/aether -> /usr/local/bin/aether${NC}"
-else
-    echo -e "${YELLOW}[!] Symlink creation may have failed. You may still use 'sudo /usr/local/bin/aether'${NC}"
-fi
-
-# 6. Create user directories
-echo -e "${YELLOW}[*] Creating configuration directories...${NC}"
-mkdir -p ~/.aether
-mkdir -p ~/aether_payloads
-echo -e "${GREEN}[+] Configuration: ~/.aether${NC}"
-echo -e "${GREEN}[+] Payload output: ~/aether_payloads${NC}"
-
-# 7. Verify sudo access
-if sudo -n true 2>/dev/null; then
-    if sudo command -v aether >/dev/null 2>&1; then
-        echo -e "${GREEN}[+] 'sudo aether' will work as expected.${NC}"
+    print_success "Found aether script"
+    
+    print_step "2" "Checking dependencies"
+    
+    local missing_deps=()
+    
+    if ! command -v msfvenom &>/dev/null; then
+        missing_deps+=("msfvenom")
     else
-        echo -e "${YELLOW}[!] 'sudo aether' might still not work. Try: sudo /usr/bin/aether${NC}"
+        print_success "Found msfvenom"
     fi
-else
-    echo -e "${YELLOW}[!] Note: If you need 'sudo aether', ensure /usr/bin is in sudo's secure_path.${NC}"
-fi
+    
+    if ! command -v msfconsole &>/dev/null; then
+        missing_deps+=("msfconsole")
+    else
+        print_success "Found msfconsole"
+    fi
+    
+    if [ ${#missing_deps[@]} -gt 0 ]; then
+        print_warning "Missing: ${missing_deps[*]}"
+        echo
+        print_info "Install Metasploit Framework:"
+        echo "  ${CYAN}sudo apt update && sudo apt install metasploit-framework -y${NC}"
+        echo
+        read -rp "Continue anyway? (y/n): " continue_anyway
+        if [ "$continue_anyway" != "y" ]; then
+            print_info "Installation cancelled"
+            exit 0
+        fi
+    fi
+    
+    print_step "3" "Setting permissions"
+    
+    chmod +x aether
+    if [ $? -eq 0 ]; then
+        print_success "Made aether executable"
+    else
+        print_error "Failed to set permissions"
+        exit 1
+    fi
+    
+    print_step "4" "Checking for existing installation"
+    
+    if [ -f "/usr/local/bin/aether" ]; then
+        print_info "AETHER is already installed at /usr/local/bin/aether"
+        read -rp "Overwrite existing installation? (y/n): " overwrite
+        if [ "$overwrite" != "y" ]; then
+            print_success "Installation cancelled - keeping existing version"
+            exit 0
+        fi
+    fi
+    
+    print_step "5" "Installing AETHER globally"
+    
+    echo "  Requires sudo privileges..."
+    if sudo cp aether /usr/local/bin/aether 2>/dev/null; then
+        sudo chmod +x /usr/local/bin/aether
+        print_success "Installed to /usr/local/bin/aether"
+    else
+        print_error "Failed to copy file (permission denied)"
+        echo
+        print_info "Try running with sudo:"
+        echo "  ${CYAN}sudo bash install.sh${NC}"
+        exit 1
+    fi
+    
+    print_step "6" "Creating convenience symlink"
+    
+    if sudo ln -sf /usr/local/bin/aether /usr/bin/aether 2>/dev/null; then
+        print_success "Created symlink: /usr/bin/aether"
+    else
+        print_warning "Could not create symlink (non-critical)"
+    fi
+    
+    print_step "7" "Creating user directories"
+    
+    mkdir -p ~/.aether 2>/dev/null
+    if [ $? -eq 0 ]; then
+        print_success "Created: ~/.aether"
+    else
+        print_error "Failed to create ~/.aether"
+    fi
+    
+    mkdir -p ~/.aether/cache 2>/dev/null
+    if [ $? -eq 0 ]; then
+        print_success "Created: ~/.aether/cache"
+    else
+        print_error "Failed to create ~/.aether/cache"
+    fi
+    
+    mkdir -p ~/aether_payloads 2>/dev/null
+    if [ $? -eq 0 ]; then
+        print_success "Created: ~/aether_payloads"
+    else
+        print_error "Failed to create ~/aether_payloads"
+    fi
+    
+    print_step "8" "Verifying installation"
+    
+    if command -v aether &>/dev/null; then
+        print_success "'aether' is available in PATH"
+        local aether_path=$(command -v aether)
+        print_info "Location: $aether_path"
+    else
+        print_error "'aether' not found in PATH"
+        echo
+        print_info "Try running: source ~/.bashrc"
+        echo "Or restart your terminal"
+    fi
+    
+    print_step "9" "Installation Complete!"
+    
+    echo
+    echo -e "${GREEN}${BOLD}✓ AETHER has been successfully installed!${NC}"
+    echo
+    
+    echo -e "${CYAN}${BOLD}Quick Start:${NC}"
+    echo "  ${GREEN}aether${NC}              Launch the application"
+    echo "  ${GREEN}sudo aether${NC}         Run with elevated privileges"
+    echo
+    
+    echo -e "${CYAN}${BOLD}Important Directories:${NC}"
+    echo "  ${YELLOW}Configuration:${NC}  ~/.aether/config"
+    echo "  ${YELLOW}Payloads:${NC}        ~/aether_payloads"
+    echo "  ${YELLOW}Logs:${NC}            ~/.aether/aether.log"
+    echo "  ${YELLOW}Cache:${NC}           ~/.aether/cache"
+    echo
+    
+    echo -e "${CYAN}${BOLD}Optional Enhancements:${NC}"
+    
+    if command -v fzf &>/dev/null; then
+        print_success "fzf found (fuzzy search enabled)"
+    else
+        print_info "Install fzf for fuzzy payload search:"
+        echo "    ${CYAN}sudo apt install fzf${NC}"
+    fi
+    
+    if command -v xterm &>/dev/null; then
+        print_success "xterm found (listener window support)"
+    elif command -v gnome-terminal &>/dev/null; then
+        print_success "gnome-terminal found (listener window support)"
+    elif command -v konsole &>/dev/null; then
+        print_success "konsole found (listener window support)"
+    else
+        print_info "Install a terminal emulator for listener support:"
+        echo "    ${CYAN}sudo apt install xterm${NC}"
+    fi
+    
+    echo
+    echo -e "${GREEN}${BOLD}Ready to use! Type 'aether' to launch.${NC}"
+    echo
+    
+    read -rp "Launch AETHER now? (y/n): " launch
+    if [ "$launch" = "y" ]; then
+        aether
+    fi
+}
 
-# 8. Success message
-echo
-echo -e "${BOLD}${GREEN}✅ Installation Complete!${NC}"
-echo -e "${BOLD}You can now run Aether from anywhere by typing:${NC}"
-echo -e "   ${GREEN}aether${NC}"
-echo -e "${BOLD}And with sudo:${NC}"
-echo -e "   ${GREEN}sudo aether${NC}"
-echo
-echo -e "${YELLOW}Enjoy responsibly! 🚀${NC}"
+trap 'print_error "Installation interrupted"; exit 1' INT TERM
+
+main "$@"
+exit 0
