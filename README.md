@@ -375,16 +375,7 @@ MIT License – See [LICENSE](LICENSE) file
 
 ### ⭐ If you find AETHER useful, consider starring the repo!
 
-**Made with ❤️ by the AETHER Team**
 
 **Stay Ethical. Stay Legal. Stay Secure.** 🔒
-
-```
-╔═══════════════════════════════════════════╗
-║  ⚡ AETHER - Payload Genesis v3.6 ⚡     ║
-║     Advanced Metasploit Frontend          ║
-║     Kali Linux Edition                    ║
-╚═══════════════════════════════════════════╝
-```
 
 </div>
